@@ -1,0 +1,712 @@
+/* ===== General Styling ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #121212;
+    background-color: #f9f9f9;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* ===== Header Styling ===== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 5%;
+    background: linear-gradient(135deg, #000000 0%, #121212 100%);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0. 1);
+}
+
+.logo img {
+    height: 60px;
+    width: auto;
+}
+
+.nav-links {
+    display: flex;
+    justify-content: center;
+    flex: 1;
+}
+
+.nav-links ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #ecf0f1;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+    position: relative;
+}
+
+.nav-links a:hover {
+    color: #f39c12;
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background-color: #f39c12;
+    transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after {
+    width: 100%;
+}
+
+.nav-links a.active {
+    color: #f39c12;
+}
+
+.nav-links a.active::after {
+    width: 100%;
+}
+
+/* ===== Button Styling ===== */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background-color: #f39c12;
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid #f39c12;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.btn:hover {
+    background-color: #e67e22;
+    border-color: #e67e22;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+}
+
+/* ===== Mobile Menu Toggle ===== */
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 5px;
+}
+
+.bar {
+    width: 25px;
+    height: 3px;
+    background-color: #ecf0f1;
+    transition: all 0.3s ease;
+}
+
+/* ===== Sections - General ===== */
+section {
+    padding: 4rem 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color:#121212;
+}
+
+section p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
+}
+
+section img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Home Section ===== */
+.home {
+    background: linear-gradient(135deg, #f9f9f9 0%, #f0f0f0 100%);
+    min-height: 90vh;
+    flex-direction: row;
+}
+
+.home-content {
+    flex: 1;
+    padding-right: 2rem;
+}
+
+.home-content h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    color:#121212;
+    line-height: 1.2;
+}
+
+.home-content p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.home-image {
+    flex: 1;
+    width: 150px; /* Adjust desired width */
+    height: auto;  /* Maintains aspect ratio */
+    object-fit: contain;
+}
+
+/* ===== About Section ===== */
+.about {
+    background-color: #fff;
+    flex-direction: row-reverse;
+}
+
+.about-content {
+    flex: 1;
+    padding-left: 2rem;
+}
+
+.about-image {
+    flex: 1;
+    max-width: 500px;
+}
+
+/* ===== Events Section ===== */
+.events {
+    background: linear-gradient(135deg, #f9f9f9 0%, #f0f0f0 100%);
+    flex-direction: row;
+}
+
+.events-content {
+    flex: 1;
+    padding-right: 2rem;
+}
+
+.events-image {
+    flex: 1;
+    max-width: 500px;
+}
+
+/* ===== Menu Section ===== */
+.menu {
+    background-color: #fff;
+    flex-direction: row-reverse;
+}
+
+.menu-content {
+    flex: 1;
+    padding-left: 2rem;
+}
+
+.menu-image {
+    flex: 1;
+    max-width: 500px;
+}
+
+/* ===== Booking Section ===== */
+.booking {
+    background: linear-gradient(135deg,#121212 0%, #1C1C1C 100%);
+    flex-direction: column;
+    text-align: center;
+    min-height: 400px;
+    justify-content: center;
+}
+
+.booking-content {
+    max-width: 600px;
+}
+
+.booking-content h2 {
+    color: #ecf0f1;
+}
+
+.booking-content p {
+    color: #bdc3c7;
+}
+
+/* ===== Contact Section ===== */
+.contact {
+    background-color: #fff;
+    flex-direction: column;
+    text-align: center;
+    min-height: 400px;
+    justify-content: center;
+}
+
+.contact-content {
+    max-width: 600px;
+}
+
+/* ===== Footer ===== */
+.footer {
+    background-color: #1a252f;
+    color: #ecf0f1;
+    text-align: center;
+    padding: 2rem 5%;
+}
+
+.footer-content p {
+    color: #ecf0f1;
+    margin-bottom: 1rem;
+}
+
+.social-links {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.social-links a {
+    color: #f39c12;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+    color: #e67e22;
+}
+
+/* ===== Dark Mode Toggle Button ===== */
+.dark-mode-toggle {
+    background: none;
+    border: 2px solid #ecf0f1;
+    color: #ecf0f1;
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+}
+
+.dark-mode-toggle:hover {
+    background-color: rgba(243, 156, 18, 0.2);
+    border-color: #f39c12;
+    transform: scale(1.1);
+}
+
+.dark-mode-toggle:active {
+    transform: scale(0.95);
+}
+
+/* ===== Dark Mode Theme ===== */
+html[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #000000;
+    --bg-tertiary: #3a3a3a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --accent: #f39c12;
+    --accent-dark: #e67e22;
+    --border: #404040;
+}
+
+html[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9f9f9;
+    --bg-tertiary: #f0f0f0;
+    --text-primary: #121212;
+    --text-secondary: #666666;
+    --accent: #f39c12;
+    --accent-dark: #e67e22;
+    --border: #e0e0e0;
+}
+
+/* Dark Mode Body */
+html[data-theme="dark"] body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark Mode Sections */
+html[data-theme="dark"] section {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html[data-theme="dark"] .home {
+    background: linear-gradient(135deg, #1a1a1a 0%, #121212 100%);
+}
+
+html[data-theme="dark"] .about {
+    background-color: #242424;
+}
+
+html[data-theme="dark"] .events {
+    background: linear-gradient(135deg, #1a1a1a 0%, #121212 100%);
+}
+
+html[data-theme="dark"] .menu {
+    background-color: #242424;
+}
+
+html[data-theme="dark"] .contact {
+    background-color: #242424;
+}
+
+html[data-theme="dark"] .booking {
+    background: linear-gradient(135deg, #1a1a1a 0%, #121212 100%);
+}
+
+/* Dark Mode Text */
+html[data-theme="dark"] section h2 {
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] section p {
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .home-content h1 {
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] .booking-content h2 {
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] .booking-content p {
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .contact-content h2 {
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] .contact-content p {
+    color: var(--text-secondary);
+}
+
+/* Dark Mode Images */
+html[data-theme="dark"] section img {
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    opacity: 0.95;
+}
+
+/* Dark Mode Footer */
+html[data-theme="dark"] .footer {
+    background-color: #0f0f0f;
+    border-top: 1px solid var(--border);
+}
+
+html[data-theme="dark"] .footer-content p {
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .social-links a {
+    color: var(--accent);
+    transition: color 0.3s ease;
+}
+
+html[data-theme="dark"] .social-links a:hover {
+    color: var(--accent-dark);
+}
+
+/* Dark Mode Button */
+html[data-theme="dark"] .btn {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+html[data-theme="dark"] .btn:hover {
+    background-color: var(--accent-dark);
+    border-color: var(--accent-dark);
+    box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+}
+
+/* Dark Mode Nav Links */
+html[data-theme="dark"] .nav-links a {
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] .nav-links a:hover {
+    color: var(--accent);
+}
+
+html[data-theme="dark"] .nav-links a::after {
+    background-color: var(--accent);
+}
+
+/* Dark Mode Menu */
+html[data-theme="dark"] .nav-links {
+    background-color: #1a1a1a;
+}
+
+/* Dark Mode Input Fields */
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] textarea:focus,
+html[data-theme="dark"] select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.3);
+}
+
+/* Dark Mode Cursor */
+html[data-theme="dark"] .custom-cursor {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.6);
+}
+
+html[data-theme="dark"] .cursor-trail {
+    background-color: rgba(243, 156, 18, 0.6);
+}
+
+/* Dark Mode Ripple */
+html[data-theme="dark"] .ripple {
+    background-color: rgba(243, 156, 18, 0.3);
+}
+
+/* Dark Mode Header */
+html[data-theme="dark"] .header {
+    background: linear-gradient(135deg, #000000 0%, #121212 100%);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark Mode Transition */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 1024px) {
+    section {
+        padding: 3rem 5%;
+        gap: 1.5rem;
+    }
+
+    .home-content h1 {
+        font-size: 2.5rem;
+    }
+
+    section h2 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Header Adjustments */
+    .header {
+        padding: 1rem 5%;
+    }
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    .nav-links {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color:#121212;
+        flex-direction: column;
+        padding: 2rem 0;
+        display: none;
+    }
+
+    .nav-links.active {
+        display: flex;
+    }
+
+    .nav-links ul {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .nav-links a {
+        display: block;
+        padding: 0.5rem 0;
+    }
+
+    .header .btn {
+        display: none;
+    }
+
+    /* Sections */
+    section {
+        flex-direction: column !important;
+        padding: 2rem 5%;
+        text-align: center;
+    }
+
+    .home-content,
+    .about-content,
+    .events-content,
+    .menu-content {
+        padding: 0 !important;
+    }
+
+    .home-image,
+    .about-image,
+    .events-image,
+    .menu-image {
+        max-width: 100%;
+    }
+
+    .home-content h1 {
+        font-size: 2rem;
+    }
+
+    section h2 {
+        font-size: 1.8rem;
+    }
+
+    section p {
+        font-size: 1rem;
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 0.75rem 3%;
+    }
+
+    .logo img {
+        height: 45px;
+    }
+
+    .dark-mode-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .home-content h1 {
+        font-size: 1.5rem;
+    }
+
+    section {
+        padding: 1.5rem 3% !important;
+    }
+
+    section h2 {
+        font-size: 1.5rem;
+    }
+
+    section p {
+        font-size: 0.95rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .nav-links ul {
+        gap: 0.5rem;
+    }
+
+    .menu-toggle {
+        gap: 3px;
+    }
+
+    .bar {
+        width: 20px;
+        height: 2px;
+    }
+}
+
+/* Dark Mode Menu Active */
+html[data-theme="dark"] .nav-links {
+    background-color: #121212;
+}
+
+html[data-theme="dark"] .nav-links a.active {
+    color: var(--accent);
+}
+
+html[data-theme="dark"] .nav-links a.active::after {
+    background-color: var(--accent);
+}
+
+/* Mobile Menu Animation */
+@media (max-width: 768px) {
+    html[data-theme="dark"] .nav-links {
+        background-color: #1a1a1a;
+        border-top: 1px solid var(--border);
+    }
+
+    .nav-links.active {
+        animation: slideDown 0.3s ease-out;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 0.75rem 3%;
+    }
+
+    .logo img {
+        height: 45px;
+    }
+
+    .home-content h1 {
+        font-size: 1.5rem;
+    }
+
+    section {
+        padding: 1.5rem 3% !important;
+    }
+
+    section h2 {
+        font-size: 1.5rem;
+    }
+
+    section p {
+        font-size: 0.95rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .nav-links ul {
+        gap: 0.5rem;
+    }
+}

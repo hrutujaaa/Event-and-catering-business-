@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Your Plate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14100D; --panel: #1D1712; --panel-raised: #241C15; --line: #3b3023;
+    --ember: #f39c12; --ember-dim: #f39c12; --ember-tint: rgba(255,106,0,0.16);
+    --cream: #F7F1E4; --cream-soft: #DCD0BC; --cream-dim: #B7A791; --danger: #FF7A63;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--cream); font-family:'Karla',sans-serif; -webkit-font-smoothing:antialiased; font-size:16px; }
+  body { line-height:1.5; }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } }
+  h1,h2,.display { font-family:'Anton', sans-serif; font-weight:400; letter-spacing:0.01em; }
+  button { font-family:inherit; }
+  .wrap { max-width: 1260px; margin: 0 auto; padding: 24px 20px 130px; }
+  header.top { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; padding-bottom:22px; border-bottom:3px solid var(--ember); margin-bottom:26px; }
+  header.top h1 { font-size:clamp(2rem,4.6vw,3.2rem); margin:0; line-height:0.95; }
+  header.top h1 span { color:var(--ember); }
+  header.top p.sub { margin:10px 0 0; color:var(--cream-soft); max-width:44ch; font-size:1rem; line-height:1.5; }
+  .size-picker { display:flex; gap:10px; flex-wrap:wrap; }
+  .size-btn { background:transparent; border:1.5px solid var(--line); color:var(--cream-soft); font-weight:600; padding:11px 16px; border-radius:5px; cursor:pointer; font-size:0.95rem; }
+  .size-btn:hover { border-color:var(--ember-dim); color:var(--cream); }
+  .size-btn.active { background:var(--ember); border-color:var(--ember); color:#1A1005; }
+
+  .layout { display:grid; grid-template-columns: 240px 1fr 360px; gap:26px; align-items:start; }
+  @media (max-width: 1080px) { .layout { grid-template-columns: 220px 1fr; } .ticket-col { display:none; } }
+  @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } .nav-col { display:none; } }
+
+  /* Step nav */
+  .nav-col { position:sticky; top:20px; display:flex; flex-direction:column; gap:4px; }
+  .nav-item { display:flex; align-items:center; gap:12px; padding:14px 12px; border-radius:6px; cursor:pointer; border:1px solid transparent; background:none; text-align:left; color:var(--cream-soft); }
+  .nav-item .n { font-family:'Anton',sans-serif; font-size:1.05rem; color:var(--cream-dim); width:22px; flex-shrink:0; }
+  .nav-item .l { font-size:0.98rem; font-weight:600; flex-grow:1; line-height:1.3; }
+  .nav-item .c { font-size:0.85rem; font-weight:700; flex-shrink:0; }
+  .nav-item.active { background:var(--panel); border-color:var(--line); color:var(--cream); }
+  .nav-item.active .n { color:var(--ember); }
+  .nav-item .c.done { color:var(--ember); }
+  .nav-item .c.warn { color:var(--danger); }
+  .nav-item:hover { color: var(--cream); }
+
+  /* Mobile top nav */
+  .mobile-nav { display:none; overflow-x:auto; gap:8px; padding-bottom:12px; margin-bottom:8px; -webkit-overflow-scrolling:touch; }
+  .mobile-nav .pill { flex-shrink:0; padding:10px 15px; border:1px solid var(--line); border-radius:999px; font-size:0.9rem; font-weight:600; color:var(--cream-soft); background:var(--panel); white-space:nowrap; }
+  .mobile-nav .pill.active { background:var(--ember); border-color:var(--ember); color:#1A1005; }
+  @media (max-width:720px) { .mobile-nav { display:flex; } }
+
+  /* Step panel */
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:28px; min-height:420px; }
+  .panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:8px; }
+  .panel-head h2 { font-size:1.7rem; margin:0; line-height:1.2; }
+  .panel-limit { font-size:0.92rem; color:var(--cream-soft); white-space:nowrap; padding-top:8px; font-weight:600; }
+  .panel-limit.warn { color:var(--danger); }
+  .search-input { width:100%; margin:16px 0 8px; background:var(--bg); border:1.5px solid var(--line); color:var(--cream); padding:13px 16px; border-radius:6px; font-size:1rem; }
+  .search-input:focus { outline:none; border-color:var(--ember-dim); }
+  .search-input::placeholder { color:var(--cream-dim); }
+
+  .selected-strip { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; padding:14px; background:var(--ember-tint); border:1px dashed var(--ember-dim); border-radius:6px; }
+  .selected-strip .empty-note { font-size:0.92rem; color:var(--cream-soft); }
+  .sel-tag { display:flex; align-items:center; gap:7px; background:var(--panel-raised); border:1px solid var(--ember-dim); color:var(--cream); font-size:0.88rem; font-weight:500; padding:6px 8px 6px 13px; border-radius:999px; }
+  .sel-tag button { background:none; border:none; color:var(--ember); cursor:pointer; font-size:1.1rem; line-height:1; padding:2px 4px; }
+
+  .group-block { margin-top:24px; }
+  .group-block h3 { font-family:'Karla',sans-serif; font-weight:700; font-size:1rem; color:var(--cream); margin:0 0 12px; padding-left:11px; border-left:3px solid var(--ember); line-height:1.3; }
+  .option-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:10px; }
+  .option-row { display:flex; align-items:center; gap:13px; padding:14px 16px; border:1.5px solid var(--line); border-radius:6px; background:var(--bg); cursor:pointer; min-height:56px; }
+  .option-row:hover { border-color:var(--ember-dim); }
+  .option-row.selected { border-color:var(--ember); background:var(--ember-tint); }
+  .option-row.disabled { opacity:0.35; cursor:not-allowed; pointer-events:none; }
+  .box { flex-shrink:0; width:23px; height:23px; border:2.5px solid var(--cream-dim); position:relative; }
+  .is-checkbox .box { border-radius:5px; }
+  .is-radio .box { border-radius:50%; }
+  .option-row.selected .box { background:var(--ember); border-color:var(--ember); }
+  .option-row.selected .box::after { content:''; position:absolute; }
+  .is-checkbox .option-row.selected .box::after { content:'✓'; color:#1A1005; font-size:14px; font-weight:700; left:3px; top:-2px; }
+  .is-radio .option-row.selected .box::after { width:10px; height:10px; border-radius:50%; background:#1A1005; left:4.25px; top:4.25px; }
+  .opt-name { flex-grow:1; font-size:1rem; font-weight:600; line-height:1.35; }
+  .opt-price { font-family:'JetBrains Mono', monospace; font-size:0.92rem; color:var(--cream-soft); font-weight:600; white-space:nowrap; }
+  .no-match { color:var(--cream-soft); font-size:0.98rem; padding:24px 0; }
+
+  .panel-foot { display:flex; justify-content:space-between; margin-top:30px; padding-top:20px; border-top:1px solid var(--line); }
+  .foot-btn { background:transparent; border:1.5px solid var(--line); color:var(--cream); padding:12px 20px; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.95rem; }
+  .foot-btn:hover { border-color:var(--ember-dim); }
+  .foot-btn.primary { background:var(--ember); border-color:var(--ember); color:#1A1005; }
+  .foot-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+  /* Ticket */
+  .ticket-col { position:sticky; top:20px; }
+  .ticket { background:var(--panel); border:1px solid var(--line); padding:24px 22px; border-radius:4px; }
+  .ticket-edge { height:10px; margin:0 -22px; background:repeating-linear-gradient(90deg, transparent, transparent 8px, var(--bg) 8px, var(--bg) 14px); }
+  .ticket-edge.bottom { margin-top:18px; }
+  .ticket h2 { font-size:1.55rem; margin:0 0 6px; color:var(--ember); }
+  .ticket .ticket-sub { font-size:0.92rem; color:var(--cream-soft); margin-bottom:14px; font-weight:600; }
+  .ticket-line { display:flex; justify-content:space-between; gap:10px; font-size:0.94rem; padding:8px 0; border-bottom:1px dashed var(--line); }
+  .ticket-line .name { color:var(--cream); font-weight:500; }
+  .ticket-line .cat { color:var(--cream-soft); font-size:0.78rem; display:block; margin-bottom:2px; }
+  .ticket-line .amt { font-family:'JetBrains Mono', monospace; white-space:nowrap; color:var(--cream); font-weight:600; }
+  .ticket-empty { color:var(--cream-soft); font-size:0.94rem; padding:12px 0; }
+  .ticket-totals { margin-top:14px; }
+  .ticket-totals .row { display:flex; justify-content:space-between; font-size:0.94rem; padding:5px 0; color:var(--cream-soft); }
+  .ticket-totals .row.grand { color:var(--cream); font-family:'Anton',sans-serif; font-size:1.5rem; padding-top:12px; border-top:1px solid var(--line); margin-top:8px; }
+  .ticket-totals .row.grand .amt { color:var(--ember); font-family:'Anton',sans-serif; }
+  .disclaimer { font-size:0.8rem; color:var(--cream-soft); margin-top:14px; line-height:1.5; }
+  .send-btn { width:100%; margin-top:16px; background:var(--ember); color:#1A1005; border:none; padding:16px; font-weight:700; font-size:1.02rem; cursor:pointer; border-radius:6px; }
+  .send-btn:hover { background:#FF7E1F; }
+  .send-warn { font-size:0.85rem; color:var(--danger); margin-top:10px; display:none; font-weight:600; }
+  .note-inline { font-size:0.78rem; color:var(--cream-soft); text-align:center; margin-top:10px; line-height:1.4; }
+
+  /* Mobile sticky bar */
+  .mobile-bar { display:none; position:fixed; left:0; right:0; bottom:0; background:var(--panel-raised); border-top:2px solid var(--ember); padding:14px 18px; align-items:center; justify-content:space-between; z-index:40; }
+  .mobile-bar .total { font-family:'Anton',sans-serif; font-size:1.3rem; }
+  .mobile-bar .total span { color:var(--ember); }
+  .mobile-bar button { background:var(--ember); color:#1A1005; border:none; padding:13px 20px; border-radius:6px; font-weight:700; font-size:0.98rem; cursor:pointer; }
+  @media (max-width:1080px) { .mobile-bar { display:flex; } }
+
+  .sheet-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:50; }
+  .sheet-overlay.open { display:block; animation:fadeIn .2s ease both; }
+  .sheet { position:fixed; animation:sheetIn .28s cubic-bezier(.2,.7,.2,1) both; left:0; right:0; bottom:0; max-height:85vh; overflow-y:auto; background:var(--panel); border-top:2px solid var(--ember); border-radius:14px 14px 0 0; padding:22px; z-index:51; }
+  .sheet-close { display:block; width:100%; text-align:center; background:none; border:none; color:var(--cream-soft); padding:8px 0 16px; font-size:0.95rem; font-weight:600; cursor:pointer; }
+
+  a, button { -webkit-tap-highlight-color: transparent; }
+  .send-btn:focus-visible, .foot-btn:focus-visible, .option-row:focus-within, .size-btn:focus-visible, .nav-item:focus-visible { outline:2px solid var(--cream); outline-offset:2px; }
+
+  /* Motion + global food search */
+  .top { animation: pageIn .65s cubic-bezier(.2,.7,.2,1) both; }
+  .layout { animation: pageIn .75s .08s cubic-bezier(.2,.7,.2,1) both; }
+  .search-shell { position:relative; width:min(100%, 520px); margin-top:18px; }
+  .global-search {
+    width:100%; background:var(--panel); border:1.5px solid var(--line); color:var(--cream);
+    padding:14px 46px 14px 44px; border-radius:7px; font-size:1rem;
+    transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  }
+  .global-search:hover { border-color:var(--ember-dim); }
+  .global-search:focus { outline:none; border-color:var(--ember); box-shadow:0 0 0 4px var(--ember-tint); }
+  .global-search-icon { position:absolute; left:15px; top:50%; transform:translateY(-50%); color:var(--cream-dim); pointer-events:none; font-size:1.05rem; }
+  .global-search-clear { position:absolute; right:9px; top:50%; transform:translateY(-50%); width:32px; height:32px; border:0; background:transparent; color:var(--cream-dim); cursor:pointer; border-radius:50%; }
+  .global-search-clear:hover { color:var(--cream); background:var(--panel-raised); }
+  .search-results {
+    position:absolute; z-index:60; left:0; right:0; top:calc(100% + 8px); max-height:360px; overflow:auto;
+    background:var(--panel-raised); border:1px solid var(--line); border-radius:9px; padding:8px;
+    box-shadow:0 18px 50px rgba(0,0,0,.35); display:none;
+  }
+  .search-results.open { display:block; animation:dropIn .18s ease both; }
+  .search-result {
+    display:flex; align-items:center; gap:12px; width:100%; padding:12px 13px; border:0; border-radius:6px;
+    background:transparent; color:var(--cream); text-align:left; cursor:pointer;
+  }
+  .search-result:hover, .search-result:focus-visible { background:var(--ember-tint); outline:none; }
+  .search-result .result-dot { width:8px; height:8px; border-radius:50%; background:var(--ember); flex:0 0 auto; }
+  .search-result .result-copy { min-width:0; flex:1; }
+  .search-result .result-name { font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .search-result .result-meta { font-size:.78rem; color:var(--cream-soft); margin-top:2px; }
+  .search-empty { padding:18px 14px; color:var(--cream-soft); font-size:.92rem; }
+  .search-count { padding:7px 12px 9px; color:var(--cream-dim); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; }
+  .size-btn, .nav-item, .pill, .foot-btn, .send-btn, .mobile-bar button { transition:transform .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease, box-shadow .2s ease; }
+  .size-btn:active, .foot-btn:active, .send-btn:active, .mobile-bar button:active { transform:translateY(1px) scale(.99); }
+  .option-row { transition:transform .2s ease, border-color .2s ease, background-color .2s ease, box-shadow .2s ease; animation:optionIn .4s both; animation-delay:calc(var(--i, 0) * 22ms); }
+  .option-row:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.16); }
+  .option-row.selected { box-shadow:0 0 0 1px rgba(255,106,0,.12), 0 8px 22px rgba(255,106,0,.08); }
+  .option-row.selected .box { animation:selectPop .25s ease both; }
+  .selected-strip { animation:fadeIn .25s ease both; }
+  .ticket-line { animation:slideIn .3s ease both; }
+  .ticket-line:nth-child(2) { animation-delay:30ms; } .ticket-line:nth-child(3) { animation-delay:60ms; }
+  .ticket-line:nth-child(4) { animation-delay:90ms; } .ticket-line:nth-child(5) { animation-delay:120ms; }
+  .panel { animation:panelIn .38s cubic-bezier(.2,.7,.2,1) both; }
+  .panel-head h2 { animation:fadeIn .4s .04s both; }
+  @keyframes pageIn { from {opacity:0; transform:translateY(10px)} to {opacity:1; transform:none} }
+  @keyframes panelIn { from {opacity:0; transform:translateY(8px)} to {opacity:1; transform:none} }
+  @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+  @keyframes dropIn { from {opacity:0; transform:translateY(-5px) scale(.99)} to {opacity:1; transform:none} }
+  @keyframes optionIn { from {opacity:0; transform:translateY(7px)} to {opacity:1; transform:none} }
+  @keyframes slideIn { from {opacity:0; transform:translateX(5px)} to {opacity:1; transform:none} }
+  @keyframes sheetIn { from {transform:translateY(100%)} to {transform:none} }
+  @keyframes selectPop { 0% {transform:scale(.8)} 70% {transform:scale(1.08)} 100% {transform:scale(1)} }
+  @media (max-width:1080px) {
+    .search-shell { width:min(100%, 480px); }
+    .ticket-col { display:none; }
+  }
+  @media (max-width:720px) {
+    .wrap { padding:18px 14px 105px; }
+    header.top { align-items:stretch; gap:18px; margin-bottom:18px; }
+    .search-shell { width:100%; margin-top:16px; }
+    .panel { padding:20px 16px; min-height:0; border-radius:7px; }
+    .panel-head h2 { font-size:1.45rem; }
+    .panel-limit { padding-top:4px; }
+    .option-grid { grid-template-columns:1fr; gap:8px; }
+    .option-row { padding:13px 14px; min-height:54px; }
+    .mobile-bar { padding:11px 14px; }
+    .mobile-bar .total { font-size:1.15rem; }
+    .mobile-bar button { padding:11px 15px; }
+    .search-results { max-height:55vh; }
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>BUILD<br>YOUR <span>PLATE</span></h1>
+      <p class="sub">Work through each step below — search the long lists, pick what you want, and your ticket updates as you go.</p>
+      <div class="search-shell">
+        <span class="global-search-icon" aria-hidden="true">⌕</span>
+        <input class="global-search" id="globalSearch" type="search" autocomplete="off"
+               placeholder="Search any food item…" aria-label="Search any food item">
+        <button class="global-search-clear" id="globalSearchClear" type="button" aria-label="Clear search" hidden>×</button>
+        <div class="search-results" id="searchResults" role="listbox" aria-label="Food search results"></div>
+      </div>
+    </div>
+    <div class="size-picker" id="sizePicker"></div>
+  </header>
+
+  <div class="mobile-nav" id="mobileNav"></div>
+
+  <div class="layout">
+    <nav class="nav-col" id="navCol"></nav>
+    <div class="panel" id="panel"></div>
+    <div class="ticket-col">
+      <div class="ticket">
+        <div class="ticket-edge"></div>
+        <h2>Your Ticket</h2>
+        <div class="ticket-sub" id="ticketSize"></div>
+        <div id="ticketLines"></div>
+        <div class="ticket-totals" id="ticketTotals"></div>
+        <div class="ticket-edge bottom"></div>
+        <p class="disclaimer" id="disclaimerText"></p>
+        <button class="send-btn" id="sendBtn">Send order on WhatsApp</button>
+        <p class="send-warn" id="sendWarn">Please choose a base and spice level first.</p>
+        <p class="note-inline">No payment happens here — we'll confirm details and send a manual invoice.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-bar" id="mobileBar">
+  <div class="total">Total: <span id="mobileTotal">$0.00</span></div>
+  <button id="mobileTicketBtn">View ticket</button>
+</div>
+
+<div class="sheet-overlay" id="sheetOverlay"></div>
+<div class="sheet" id="sheet" style="display:none;">
+  <button class="sheet-close" id="sheetClose">Close</button>
+  <div id="sheetContent"></div>
+</div>
+
+<script>
+const DATA = {"meta": {"productName": "Build-Your-Plate Estimator", "description": "Static, client-side quote/lead generator data. No backend required.", "currency": "USD", "totalOptionsCount": 507, "version": "1.1.0"}, "theme": {"brandNamePlaceholder": "YOUR RESTAURANT NAME", "colors": {"primary": "#FF6A00", "primaryDark": "#CC5200", "primaryLight": "#FF8C33", "background": "#14100D", "surface": "#1D1712", "surfaceAlt": "#241C15", "border": "#33281E", "textPrimary": "#F3EAD9", "textSecondary": "#A99A87", "textOnPrimary": "#1A1005", "accent": "#FFA733", "success": "#4CAF50", "danger": "#E5533D"}}, "sizes": [{"id": "size-small", "name": "Small", "basePrice": 6.99, "serves": 1}, {"id": "size-regular", "name": "Regular", "basePrice": 8.99, "serves": 1}, {"id": "size-large", "name": "Large", "basePrice": 10.99, "serves": 1}, {"id": "size-family", "name": "Family / Sharing", "basePrice": 18.99, "serves": "3-4"}], "categories": [{"id": "base", "label": "Choose Your Base", "selectionType": "single", "required": true, "minSelect": 1, "maxSelect": 1, "freeIncluded": 1, "options": [{"id": "base-1", "name": "White Rice", "price": 0.0, "group": "Rice & Grains"}, {"id": "base-2", "name": "Brown Rice", "price": 0.0, "group": "Rice & Grains"}, {"id": "base-3", "name": "Basmati Rice", "price": 0.0, "group": "Rice & Grains"}, {"id": "base-4", "name": "Jasmine Rice", "price": 0.0, "group": "Rice & Grains"}, {"id": "base-5", "name": "Cauliflower Rice", "price": 0.0, "group": "Rice & Grains"}, {"id": "base-6", "name": "Quinoa", "price": 0.0, "group": "Rice & Grains"}, {"id": "base-7", "name": "Couscous", "price": 0.0, "group": "Rice & Grains"}, {"id": "base-8", "name": "Mixed Greens", "price": 0.0, "group": "Leafy Greens"}, {"id": "base-9", "name": "Romaine Lettuce Base", "price": 0.0, "group": "Leafy Greens"}, {"id": "base-10", "name": "Baby Spinach Base", "price": 0.0, "group": "Leafy Greens"}, {"id": "base-11", "name": "Kale Base", "price": 0.0, "group": "Leafy Greens"}, {"id": "base-12", "name": "Orzo Pasta", "price": 0.0, "group": "Pasta & Noodles"}, {"id": "base-13", "name": "Penne Pasta", "price": 0.0, "group": "Pasta & Noodles"}, {"id": "base-14", "name": "Rice Noodles", "price": 0.0, "group": "Pasta & Noodles"}, {"id": "base-15", "name": "Egg Noodles", "price": 0.0, "group": "Pasta & Noodles"}, {"id": "base-16", "name": "Soba Noodles", "price": 0.0, "group": "Pasta & Noodles"}, {"id": "base-17", "name": "Flatbread Base", "price": 0.0, "group": "Flatbreads"}, {"id": "base-18", "name": "Pita Base", "price": 0.0, "group": "Flatbreads"}, {"id": "base-19", "name": "Naan Base", "price": 0.0, "group": "Flatbreads"}, {"id": "base-20", "name": "Tortilla Base", "price": 0.0, "group": "Flatbreads"}]}, {"id": "protein", "label": "Pick Your Protein", "selectionType": "multiple", "required": false, "minSelect": 0, "maxSelect": 3, "freeIncluded": 1, "options": [{"id": "protein-chicken-grilled", "name": "Grilled Chicken", "price": 3.25, "group": "Chicken", "vegetarian": false}, {"id": "protein-chicken-tandoori", "name": "Tandoori Chicken", "price": 3.25, "group": "Chicken", "vegetarian": false}, {"id": "protein-chicken-bbq", "name": "BBQ Chicken", "price": 2.75, "group": "Chicken", "vegetarian": false}, {"id": "protein-chicken-buffalo", "name": "Buffalo Chicken", "price": 2.75, "group": "Chicken", "vegetarian": false}, {"id": "protein-chicken-lemon-herb", "name": "Lemon Herb Chicken", "price": 3.5, "group": "Chicken", "vegetarian": false}, {"id": "protein-chicken-blackened", "name": "Blackened Chicken", "price": 2.75, "group": "Chicken", "vegetarian": false}, {"id": "protein-tofu-grilled", "name": "Grilled Tofu", "price": 2.5, "group": "Tofu", "vegetarian": true}, {"id": "protein-tofu-tandoori", "name": "Tandoori Tofu", "price": 2.5, "group": "Tofu", "vegetarian": true}, {"id": "protein-tofu-bbq", "name": "BBQ Tofu", "price": 3.25, "group": "Tofu", "vegetarian": true}, {"id": "protein-tofu-buffalo", "name": "Buffalo Tofu", "price": 3.0, "group": "Tofu", "vegetarian": true}, {"id": "protein-tofu-lemon-herb", "name": "Lemon Herb Tofu", "price": 3.25, "group": "Tofu", "vegetarian": true}, {"id": "protein-tofu-blackened", "name": "Blackened Tofu", "price": 3.25, "group": "Tofu", "vegetarian": true}, {"id": "protein-chickpea-grilled", "name": "Grilled Chickpea", "price": 2.5, "group": "Chickpea", "vegetarian": true}, {"id": "protein-chickpea-tandoori", "name": "Tandoori Chickpea", "price": 3.0, "group": "Chickpea", "vegetarian": true}, {"id": "protein-chickpea-bbq", "name": "BBQ Chickpea", "price": 2.5, "group": "Chickpea", "vegetarian": true}, {"id": "protein-chickpea-buffalo", "name": "Buffalo Chickpea", "price": 2.5, "group": "Chickpea", "vegetarian": true}, {"id": "protein-chickpea-lemon-herb", "name": "Lemon Herb Chickpea", "price": 2.75, "group": "Chickpea", "vegetarian": true}, {"id": "protein-chickpea-blackened", "name": "Blackened Chickpea", "price": 2.5, "group": "Chickpea", "vegetarian": true}, {"id": "protein-paneer-grilled", "name": "Grilled Paneer", "price": 3.5, "group": "Paneer", "vegetarian": true}, {"id": "protein-paneer-tandoori", "name": "Tandoori Paneer", "price": 3.25, "group": "Paneer", "vegetarian": true}, {"id": "protein-paneer-bbq", "name": "BBQ Paneer", "price": 3.5, "group": "Paneer", "vegetarian": true}, {"id": "protein-paneer-buffalo", "name": "Buffalo Paneer", "price": 2.75, "group": "Paneer", "vegetarian": true}, {"id": "protein-paneer-lemon-herb", "name": "Lemon Herb Paneer", "price": 3.0, "group": "Paneer", "vegetarian": true}, {"id": "protein-paneer-blackened", "name": "Blackened Paneer", "price": 3.0, "group": "Paneer", "vegetarian": true}, {"id": "protein-turkey-grilled", "name": "Grilled Turkey", "price": 2.75, "group": "Turkey", "vegetarian": false}, {"id": "protein-turkey-tandoori", "name": "Tandoori Turkey", "price": 3.0, "group": "Turkey", "vegetarian": false}, {"id": "protein-turkey-bbq", "name": "BBQ Turkey", "price": 2.75, "group": "Turkey", "vegetarian": false}, {"id": "protein-turkey-buffalo", "name": "Buffalo Turkey", "price": 3.0, "group": "Turkey", "vegetarian": false}, {"id": "protein-turkey-lemon-herb", "name": "Lemon Herb Turkey", "price": 3.5, "group": "Turkey", "vegetarian": false}, {"id": "protein-turkey-blackened", "name": "Blackened Turkey", "price": 3.0, "group": "Turkey", "vegetarian": false}, {"id": "protein-beef-grilled", "name": "Grilled Beef", "price": 3.75, "group": "Beef", "vegetarian": false}, {"id": "protein-beef-tandoori", "name": "Tandoori Beef", "price": 3.75, "group": "Beef", "vegetarian": false}, {"id": "protein-beef-bbq", "name": "BBQ Beef", "price": 3.75, "group": "Beef", "vegetarian": false}, {"id": "protein-beef-buffalo", "name": "Buffalo Beef", "price": 4.5, "group": "Beef", "vegetarian": false}, {"id": "protein-beef-lemon-herb", "name": "Lemon Herb Beef", "price": 4.25, "group": "Beef", "vegetarian": false}, {"id": "protein-beef-blackened", "name": "Blackened Beef", "price": 4.0, "group": "Beef", "vegetarian": false}, {"id": "protein-pork-grilled", "name": "Grilled Pork", "price": 3.5, "group": "Pork", "vegetarian": false}, {"id": "protein-pork-tandoori", "name": "Tandoori Pork", "price": 4.0, "group": "Pork", "vegetarian": false}, {"id": "protein-pork-bbq", "name": "BBQ Pork", "price": 3.5, "group": "Pork", "vegetarian": false}, {"id": "protein-pork-buffalo", "name": "Buffalo Pork", "price": 3.75, "group": "Pork", "vegetarian": false}, {"id": "protein-pork-lemon-herb", "name": "Lemon Herb Pork", "price": 4.25, "group": "Pork", "vegetarian": false}, {"id": "protein-pork-blackened", "name": "Blackened Pork", "price": 4.0, "group": "Pork", "vegetarian": false}, {"id": "protein-halloumi-grilled", "name": "Grilled Halloumi", "price": 4.0, "group": "Halloumi", "vegetarian": true}, {"id": "protein-halloumi-tandoori", "name": "Tandoori Halloumi", "price": 4.25, "group": "Halloumi", "vegetarian": true}, {"id": "protein-halloumi-bbq", "name": "BBQ Halloumi", "price": 4.25, "group": "Halloumi", "vegetarian": true}, {"id": "protein-halloumi-buffalo", "name": "Buffalo Halloumi", "price": 4.25, "group": "Halloumi", "vegetarian": true}, {"id": "protein-halloumi-lemon-herb", "name": "Lemon Herb Halloumi", "price": 3.75, "group": "Halloumi", "vegetarian": true}, {"id": "protein-halloumi-blackened", "name": "Blackened Halloumi", "price": 3.5, "group": "Halloumi", "vegetarian": true}, {"id": "protein-falafel-grilled", "name": "Grilled Falafel", "price": 2.5, "group": "Falafel", "vegetarian": true}, {"id": "protein-falafel-tandoori", "name": "Tandoori Falafel", "price": 2.5, "group": "Falafel", "vegetarian": true}, {"id": "protein-falafel-bbq", "name": "BBQ Falafel", "price": 2.5, "group": "Falafel", "vegetarian": true}, {"id": "protein-falafel-buffalo", "name": "Buffalo Falafel", "price": 3.25, "group": "Falafel", "vegetarian": true}, {"id": "protein-falafel-lemon-herb", "name": "Lemon Herb Falafel", "price": 3.25, "group": "Falafel", "vegetarian": true}, {"id": "protein-falafel-blackened", "name": "Blackened Falafel", "price": 2.5, "group": "Falafel", "vegetarian": true}, {"id": "protein-shrimp-grilled", "name": "Grilled Shrimp", "price": 5.25, "group": "Shrimp", "vegetarian": false}, {"id": "protein-shrimp-tandoori", "name": "Tandoori Shrimp", "price": 5.0, "group": "Shrimp", "vegetarian": false}, {"id": "protein-shrimp-bbq", "name": "BBQ Shrimp", "price": 5.5, "group": "Shrimp", "vegetarian": false}, {"id": "protein-shrimp-buffalo", "name": "Buffalo Shrimp", "price": 5.0, "group": "Shrimp", "vegetarian": false}, {"id": "protein-shrimp-lemon-herb", "name": "Lemon Herb Shrimp", "price": 4.75, "group": "Shrimp", "vegetarian": false}, {"id": "protein-shrimp-blackened", "name": "Blackened Shrimp", "price": 4.75, "group": "Shrimp", "vegetarian": false}, {"id": "protein-salmon-grilled", "name": "Grilled Salmon", "price": 5.5, "group": "Salmon", "vegetarian": false}, {"id": "protein-salmon-tandoori", "name": "Tandoori Salmon", "price": 5.25, "group": "Salmon", "vegetarian": false}, {"id": "protein-salmon-bbq", "name": "BBQ Salmon", "price": 5.5, "group": "Salmon", "vegetarian": false}, {"id": "protein-salmon-buffalo", "name": "Buffalo Salmon", "price": 6.0, "group": "Salmon", "vegetarian": false}, {"id": "protein-salmon-lemon-herb", "name": "Lemon Herb Salmon", "price": 5.5, "group": "Salmon", "vegetarian": false}, {"id": "protein-salmon-blackened", "name": "Blackened Salmon", "price": 5.25, "group": "Salmon", "vegetarian": false}, {"id": "protein-tuna-grilled", "name": "Grilled Tuna", "price": 5.75, "group": "Tuna", "vegetarian": false}, {"id": "protein-tuna-tandoori", "name": "Tandoori Tuna", "price": 5.25, "group": "Tuna", "vegetarian": false}, {"id": "protein-tuna-bbq", "name": "BBQ Tuna", "price": 4.75, "group": "Tuna", "vegetarian": false}, {"id": "protein-tuna-buffalo", "name": "Buffalo Tuna", "price": 4.75, "group": "Tuna", "vegetarian": false}, {"id": "protein-tuna-lemon-herb", "name": "Lemon Herb Tuna", "price": 4.75, "group": "Tuna", "vegetarian": false}, {"id": "protein-tuna-blackened", "name": "Blackened Tuna", "price": 5.5, "group": "Tuna", "vegetarian": false}, {"id": "protein-lamb-grilled", "name": "Grilled Lamb", "price": 5.75, "group": "Lamb", "vegetarian": false}, {"id": "protein-lamb-tandoori", "name": "Tandoori Lamb", "price": 5.5, "group": "Lamb", "vegetarian": false}, {"id": "protein-lamb-bbq", "name": "BBQ Lamb", "price": 5.0, "group": "Lamb", "vegetarian": false}, {"id": "protein-lamb-buffalo", "name": "Buffalo Lamb", "price": 5.5, "group": "Lamb", "vegetarian": false}, {"id": "protein-lamb-lemon-herb", "name": "Lemon Herb Lamb", "price": 6.0, "group": "Lamb", "vegetarian": false}, {"id": "protein-lamb-blackened", "name": "Blackened Lamb", "price": 5.5, "group": "Lamb", "vegetarian": false}, {"id": "protein-duck-grilled", "name": "Grilled Duck", "price": 6.25, "group": "Duck", "vegetarian": false}, {"id": "protein-duck-tandoori", "name": "Tandoori Duck", "price": 6.0, "group": "Duck", "vegetarian": false}, {"id": "protein-duck-bbq", "name": "BBQ Duck", "price": 5.25, "group": "Duck", "vegetarian": false}, {"id": "protein-duck-buffalo", "name": "Buffalo Duck", "price": 6.0, "group": "Duck", "vegetarian": false}, {"id": "protein-duck-lemon-herb", "name": "Lemon Herb Duck", "price": 6.0, "group": "Duck", "vegetarian": false}, {"id": "protein-duck-blackened", "name": "Blackened Duck", "price": 5.75, "group": "Duck", "vegetarian": false}]}, {"id": "toppings", "label": "Veggies & Toppings", "selectionType": "multiple", "required": false, "minSelect": 0, "maxSelect": 15, "freeIncluded": 5, "options": [{"id": "topping-1", "name": "Lettuce", "price": 0.5, "group": "Leafy Greens"}, {"id": "topping-2", "name": "Romaine Lettuce", "price": 0.5, "group": "Leafy Greens"}, {"id": "topping-3", "name": "Iceberg Lettuce", "price": 0.5, "group": "Leafy Greens"}, {"id": "topping-4", "name": "Baby Spinach", "price": 0.5, "group": "Leafy Greens"}, {"id": "topping-5", "name": "Kale", "price": 0.5, "group": "Leafy Greens"}, {"id": "topping-6", "name": "Arugula", "price": 0.5, "group": "Leafy Greens"}, {"id": "topping-7", "name": "Red Cabbage", "price": 0.5, "group": "Leafy Greens"}, {"id": "topping-8", "name": "Green Cabbage", "price": 0.5, "group": "Leafy Greens"}, {"id": "topping-9", "name": "Napa Cabbage", "price": 0.5, "group": "Leafy Greens"}, {"id": "topping-10", "name": "Tomato", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-11", "name": "Cherry Tomatoes", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-12", "name": "Grape Tomatoes", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-13", "name": "Sun-Dried Tomatoes", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-14", "name": "Cucumber", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-15", "name": "English Cucumber", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-16", "name": "Red Onion", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-17", "name": "White Onion", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-18", "name": "Yellow Onion", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-19", "name": "Green Onion", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-20", "name": "Pickled Red Onion", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-21", "name": "Shallots", "price": 0.5, "group": "Tomatoes & Alliums"}, {"id": "topping-22", "name": "Corn", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-23", "name": "Grilled Corn", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-24", "name": "Black Beans", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-25", "name": "Kidney Beans", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-26", "name": "Pinto Beans", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-27", "name": "Chickpeas Topping", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-28", "name": "Edamame", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-29", "name": "Green Peas", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-30", "name": "Black Olives", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-31", "name": "Kalamata Olives", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-32", "name": "Green Olives", "price": 0.5, "group": "Corn, Beans & Olives"}, {"id": "topping-33", "name": "Roasted Red Peppers", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-34", "name": "Banana Peppers", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-35", "name": "Pepperoncini", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-36", "name": "Jalapenos", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-37", "name": "Pickled Jalapenos", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-38", "name": "Serrano Peppers", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-39", "name": "Mushrooms", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-40", "name": "Portobello Mushrooms", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-41", "name": "Shiitake Mushrooms", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-42", "name": "Bell Pepper Red", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-43", "name": "Bell Pepper Green", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-44", "name": "Bell Pepper Yellow", "price": 0.5, "group": "Peppers & Mushrooms"}, {"id": "topping-45", "name": "Zucchini", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-46", "name": "Yellow Squash", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-47", "name": "Eggplant", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-48", "name": "Asparagus", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-49", "name": "Broccoli", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-50", "name": "Cauliflower", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-51", "name": "Carrots", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-52", "name": "Shredded Carrots", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-53", "name": "Beets", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-54", "name": "Radish", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-55", "name": "Daikon Radish", "price": 0.5, "group": "Roots & Roasting Vegetables"}, {"id": "topping-56", "name": "Avocado", "price": 0.5, "group": "Creamy & Fresh"}, {"id": "topping-57", "name": "Guacamole Topping", "price": 0.5, "group": "Creamy & Fresh"}, {"id": "topping-58", "name": "Artichoke Hearts", "price": 0.5, "group": "Creamy & Fresh"}, {"id": "topping-59", "name": "Capers", "price": 0.5, "group": "Creamy & Fresh"}, {"id": "topping-60", "name": "Alfalfa Sprouts", "price": 0.5, "group": "Creamy & Fresh"}, {"id": "topping-61", "name": "Bean Sprouts", "price": 0.5, "group": "Creamy & Fresh"}, {"id": "topping-62", "name": "Pineapple", "price": 0.5, "group": "Fruits & Sweet"}, {"id": "topping-63", "name": "Mango", "price": 0.5, "group": "Fruits & Sweet"}, {"id": "topping-64", "name": "Apple Slices", "price": 0.5, "group": "Fruits & Sweet"}, {"id": "topping-65", "name": "Dried Cranberries", "price": 0.5, "group": "Fruits & Sweet"}, {"id": "topping-66", "name": "Raisins", "price": 0.5, "group": "Fruits & Sweet"}, {"id": "topping-67", "name": "Dates", "price": 0.5, "group": "Fruits & Sweet"}, {"id": "topping-68", "name": "Pomegranate Seeds", "price": 0.5, "group": "Fruits & Sweet"}, {"id": "topping-69", "name": "Roasted Garlic", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-70", "name": "Caramelized Onions", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-71", "name": "Sun-Dried Tomato Tapenade", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-72", "name": "Basil Leaves", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-73", "name": "Cilantro", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-74", "name": "Parsley", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-75", "name": "Mint Leaves", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-76", "name": "Dill", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-77", "name": "Scallions", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-78", "name": "Chives", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-79", "name": "Fennel", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-80", "name": "Celery", "price": 0.5, "group": "Aromatics & Herbs"}, {"id": "topping-81", "name": "Snap Peas", "price": 0.5, "group": "Crunch & Pods"}, {"id": "topping-82", "name": "Snow Peas", "price": 0.5, "group": "Crunch & Pods"}, {"id": "topping-83", "name": "Water Chestnuts", "price": 0.5, "group": "Crunch & Pods"}, {"id": "topping-84", "name": "Bamboo Shoots", "price": 0.5, "group": "Crunch & Pods"}, {"id": "topping-85", "name": "Baby Corn", "price": 0.5, "group": "Crunch & Pods"}, {"id": "topping-86", "name": "Bok Choy", "price": 0.5, "group": "Crunch & Pods"}, {"id": "topping-87", "name": "Brussels Sprouts", "price": 0.5, "group": "Crunch & Pods"}, {"id": "topping-88", "name": "Sweet Potato Cubed", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-89", "name": "Butternut Squash", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-90", "name": "Pumpkin", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-91", "name": "Okra", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-92", "name": "Green Beans", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-93", "name": "Lima Beans", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-94", "name": "Cannellini Beans", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-95", "name": "Lentils", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-96", "name": "Split Peas", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-97", "name": "Roasted Chickpeas", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-98", "name": "Marinated Tofu Cubes", "price": 0.5, "group": "Squash, Roots & Pulses"}, {"id": "topping-99", "name": "Kimchi", "price": 0.5, "group": "Pickled & Fermented"}, {"id": "topping-100", "name": "Sauerkraut", "price": 0.5, "group": "Pickled & Fermented"}, {"id": "topping-101", "name": "Pickled Cucumber", "price": 0.5, "group": "Pickled & Fermented"}, {"id": "topping-102", "name": "Pickled Beets", "price": 0.5, "group": "Pickled & Fermented"}, {"id": "topping-103", "name": "Pickled Carrots", "price": 0.5, "group": "Pickled & Fermented"}, {"id": "topping-104", "name": "Giardiniera", "price": 0.5, "group": "Pickled & Fermented"}, {"id": "topping-105", "name": "Roasted Cherry Tomatoes", "price": 0.5, "group": "Charred & Toasted"}, {"id": "topping-106", "name": "Charred Corn", "price": 0.5, "group": "Charred & Toasted"}, {"id": "topping-107", "name": "Grilled Zucchini", "price": 0.5, "group": "Charred & Toasted"}, {"id": "topping-108", "name": "Grilled Eggplant", "price": 0.5, "group": "Charred & Toasted"}, {"id": "topping-109", "name": "Roasted Butternut Squash", "price": 0.5, "group": "Charred & Toasted"}, {"id": "topping-110", "name": "Roasted Brussels Sprouts", "price": 0.5, "group": "Charred & Toasted"}, {"id": "topping-111", "name": "Crispy Chickpeas", "price": 0.5, "group": "Charred & Toasted"}, {"id": "topping-112", "name": "Crispy Onions Topping", "price": 0.5, "group": "Charred & Toasted"}, {"id": "topping-113", "name": "Fried Shallots Topping", "price": 0.5, "group": "Charred & Toasted"}, {"id": "topping-114", "name": "Toasted Coconut", "price": 0.5, "group": "Charred & Toasted"}, {"id": "topping-115", "name": "Golden Raisins", "price": 0.5, "group": "Dried Fruit & Citrus"}, {"id": "topping-116", "name": "Dried Apricots", "price": 0.5, "group": "Dried Fruit & Citrus"}, {"id": "topping-117", "name": "Fresh Figs", "price": 0.5, "group": "Dried Fruit & Citrus"}, {"id": "topping-118", "name": "Blueberries", "price": 0.5, "group": "Dried Fruit & Citrus"}, {"id": "topping-119", "name": "Strawberries", "price": 0.5, "group": "Dried Fruit & Citrus"}, {"id": "topping-120", "name": "Orange Segments", "price": 0.5, "group": "Dried Fruit & Citrus"}, {"id": "topping-121", "name": "Grapefruit Segments", "price": 0.5, "group": "Dried Fruit & Citrus"}, {"id": "topping-122", "name": "Pomelo", "price": 0.5, "group": "Dried Fruit & Citrus"}, {"id": "topping-123", "name": "Jicama", "price": 0.5, "group": "Specialty Greens"}, {"id": "topping-124", "name": "Watercress", "price": 0.5, "group": "Specialty Greens"}, {"id": "topping-125", "name": "Endive", "price": 0.5, "group": "Specialty Greens"}, {"id": "topping-126", "name": "Radicchio", "price": 0.5, "group": "Specialty Greens"}, {"id": "topping-127", "name": "Frisee", "price": 0.5, "group": "Specialty Greens"}, {"id": "topping-128", "name": "Micro Greens", "price": 0.5, "group": "Specialty Greens"}, {"id": "topping-129", "name": "Everything Bagel Seasoning Topping", "price": 0.5, "group": "Specialty Greens"}]}, {"id": "cheese", "label": "Cheese", "selectionType": "multiple", "required": false, "minSelect": 0, "maxSelect": 5, "freeIncluded": 1, "options": [{"id": "cheese-1", "name": "Cheddar", "price": 0.75, "group": "Everyday Melts"}, {"id": "cheese-2", "name": "Mozzarella", "price": 0.75, "group": "Everyday Melts"}, {"id": "cheese-3", "name": "Feta", "price": 0.75, "group": "Everyday Melts"}, {"id": "cheese-4", "name": "Parmesan", "price": 0.75, "group": "Everyday Melts"}, {"id": "cheese-5", "name": "Pepper Jack", "price": 0.75, "group": "Everyday Melts"}, {"id": "cheese-6", "name": "Monterey Jack", "price": 0.75, "group": "Everyday Melts"}, {"id": "cheese-7", "name": "Blue Cheese", "price": 0.75, "group": "Bold & Tangy"}, {"id": "cheese-8", "name": "Goat Cheese", "price": 0.75, "group": "Bold & Tangy"}, {"id": "cheese-9", "name": "Cotija", "price": 0.75, "group": "Bold & Tangy"}, {"id": "cheese-10", "name": "Queso Fresco", "price": 0.75, "group": "Bold & Tangy"}, {"id": "cheese-11", "name": "Paneer Cheese", "price": 1.0, "group": "Bold & Tangy"}, {"id": "cheese-12", "name": "Halloumi Cheese", "price": 0.75, "group": "Bold & Tangy"}, {"id": "cheese-13", "name": "Provolone", "price": 0.75, "group": "Classic Continental"}, {"id": "cheese-14", "name": "Swiss", "price": 0.75, "group": "Classic Continental"}, {"id": "cheese-15", "name": "Gouda", "price": 0.75, "group": "Classic Continental"}, {"id": "cheese-16", "name": "Brie", "price": 0.75, "group": "Classic Continental"}, {"id": "cheese-17", "name": "Ricotta", "price": 0.75, "group": "Classic Continental"}, {"id": "cheese-18", "name": "Cream Cheese", "price": 0.75, "group": "Classic Continental"}, {"id": "cheese-19", "name": "Nacho Cheese Sauce", "price": 0.75, "group": "Sauces & Specialty"}, {"id": "cheese-20", "name": "Shredded Mexican Blend", "price": 0.5, "group": "Sauces & Specialty"}, {"id": "cheese-21", "name": "Vegan Cheese", "price": 0.75, "group": "Sauces & Specialty"}, {"id": "cheese-22", "name": "Smoked Cheddar", "price": 1.0, "group": "Sauces & Specialty"}, {"id": "cheese-23", "name": "Gruyere", "price": 1.0, "group": "Sauces & Specialty"}, {"id": "cheese-24", "name": "Mascarpone", "price": 0.5, "group": "Sauces & Specialty"}, {"id": "cheese-25", "name": "Burrata", "price": 0.75, "group": "Sauces & Specialty"}, {"id": "cheese-26", "name": "Mozzarella Pearls", "price": 0.75, "group": "Sauces & Specialty"}]}, {"id": "sauce", "label": "Sauces & Dressings", "selectionType": "multiple", "required": false, "minSelect": 0, "maxSelect": 6, "freeIncluded": 2, "options": [{"id": "sauce-1", "name": "Ranch", "price": 0.5, "group": "Classic & Creamy"}, {"id": "sauce-2", "name": "Caesar Dressing", "price": 0.5, "group": "Classic & Creamy"}, {"id": "sauce-3", "name": "Blue Cheese Dressing", "price": 0.5, "group": "Classic & Creamy"}, {"id": "sauce-4", "name": "Honey Mustard", "price": 0.5, "group": "Classic & Creamy"}, {"id": "sauce-5", "name": "Classic BBQ", "price": 0.5, "group": "Barbecue & Spicy"}, {"id": "sauce-6", "name": "Spicy BBQ", "price": 0.5, "group": "Barbecue & Spicy"}, {"id": "sauce-7", "name": "Buffalo Sauce", "price": 0.5, "group": "Barbecue & Spicy"}, {"id": "sauce-8", "name": "Sriracha Mayo", "price": 0.5, "group": "Barbecue & Spicy"}, {"id": "sauce-9", "name": "Chipotle Mayo", "price": 0.5, "group": "Barbecue & Spicy"}, {"id": "sauce-10", "name": "Garlic Aioli", "price": 0.5, "group": "Barbecue & Spicy"}, {"id": "sauce-11", "name": "Tzatziki", "price": 0.5, "group": "Mediterranean & Middle Eastern"}, {"id": "sauce-12", "name": "Hummus Sauce", "price": 0.5, "group": "Mediterranean & Middle Eastern"}, {"id": "sauce-13", "name": "Tahini", "price": 0.5, "group": "Mediterranean & Middle Eastern"}, {"id": "sauce-14", "name": "Harissa", "price": 0.5, "group": "Mediterranean & Middle Eastern"}, {"id": "sauce-15", "name": "Peri-Peri Sauce", "price": 0.5, "group": "Mediterranean & Middle Eastern"}, {"id": "sauce-16", "name": "Sweet Chili Sauce", "price": 0.5, "group": "Asian-Inspired"}, {"id": "sauce-17", "name": "Teriyaki Sauce", "price": 0.5, "group": "Asian-Inspired"}, {"id": "sauce-18", "name": "Soy Ginger Sauce", "price": 0.5, "group": "Asian-Inspired"}, {"id": "sauce-19", "name": "Sesame Ginger Dressing", "price": 0.5, "group": "Asian-Inspired"}, {"id": "sauce-20", "name": "Thousand Island", "price": 0.5, "group": "Classic Dressings"}, {"id": "sauce-21", "name": "Italian Dressing", "price": 0.5, "group": "Classic Dressings"}, {"id": "sauce-22", "name": "Balsamic Vinaigrette", "price": 0.5, "group": "Classic Dressings"}, {"id": "sauce-23", "name": "Greek Vinaigrette", "price": 0.5, "group": "Classic Dressings"}, {"id": "sauce-24", "name": "Lemon Herb Dressing", "price": 0.5, "group": "Classic Dressings"}, {"id": "sauce-25", "name": "Chimichurri", "price": 0.5, "group": "Latin & Mexican"}, {"id": "sauce-26", "name": "Salsa Verde", "price": 0.5, "group": "Latin & Mexican"}, {"id": "sauce-27", "name": "Salsa Roja", "price": 0.5, "group": "Latin & Mexican"}, {"id": "sauce-28", "name": "Pico de Gallo", "price": 0.5, "group": "Latin & Mexican"}, {"id": "sauce-29", "name": "Guacamole Sauce", "price": 0.5, "group": "Latin & Mexican"}, {"id": "sauce-30", "name": "Queso Blanco", "price": 0.5, "group": "Latin & Mexican"}, {"id": "sauce-31", "name": "Nacho Cheese Sauce Add", "price": 0.5, "group": "Latin & Mexican"}, {"id": "sauce-32", "name": "Spicy Mayo", "price": 0.5, "group": "Latin & Mexican"}, {"id": "sauce-33", "name": "Wasabi Mayo", "price": 0.5, "group": "Asian Sweet & Savory"}, {"id": "sauce-34", "name": "Ponzu Sauce", "price": 0.5, "group": "Asian Sweet & Savory"}, {"id": "sauce-35", "name": "Hoisin Sauce", "price": 0.5, "group": "Asian Sweet & Savory"}, {"id": "sauce-36", "name": "Sweet and Sour Sauce", "price": 0.5, "group": "Asian Sweet & Savory"}, {"id": "sauce-37", "name": "Orange Sauce", "price": 0.5, "group": "Asian Sweet & Savory"}, {"id": "sauce-38", "name": "General Tso Sauce", "price": 0.5, "group": "Asian Sweet & Savory"}, {"id": "sauce-39", "name": "Kung Pao Sauce", "price": 0.5, "group": "Asian Sweet & Savory"}, {"id": "sauce-40", "name": "Yellow Curry Sauce", "price": 0.5, "group": "Indian & Curry"}, {"id": "sauce-41", "name": "Tikka Masala Sauce", "price": 0.5, "group": "Indian & Curry"}, {"id": "sauce-42", "name": "Korma Sauce", "price": 0.5, "group": "Indian & Curry"}, {"id": "sauce-43", "name": "Vindaloo Sauce", "price": 0.5, "group": "Indian & Curry"}, {"id": "sauce-44", "name": "Mint Chutney", "price": 0.5, "group": "Indian & Curry"}, {"id": "sauce-45", "name": "Tamarind Chutney", "price": 0.5, "group": "Indian & Curry"}, {"id": "sauce-46", "name": "Raita", "price": 0.5, "group": "Indian & Curry"}, {"id": "sauce-47", "name": "Basil Pesto", "price": 0.5, "group": "Italian"}, {"id": "sauce-48", "name": "Sun-Dried Tomato Pesto", "price": 0.5, "group": "Italian"}, {"id": "sauce-49", "name": "Alfredo Sauce", "price": 0.5, "group": "Italian"}, {"id": "sauce-50", "name": "Marinara Sauce", "price": 0.5, "group": "Italian"}, {"id": "sauce-51", "name": "Arrabbiata Sauce", "price": 0.5, "group": "Italian"}, {"id": "sauce-52", "name": "Vodka Sauce", "price": 0.5, "group": "Italian"}, {"id": "sauce-53", "name": "Garlic Butter Sauce", "price": 0.5, "group": "Buttery & Rich"}, {"id": "sauce-54", "name": "Cajun Butter", "price": 0.5, "group": "Buttery & Rich"}, {"id": "sauce-55", "name": "Herb Butter", "price": 0.5, "group": "Buttery & Rich"}, {"id": "sauce-56", "name": "Truffle Aioli", "price": 0.5, "group": "Buttery & Rich"}, {"id": "sauce-57", "name": "Chili Garlic Sauce", "price": 0.5, "group": "Hot & Fiery"}, {"id": "sauce-58", "name": "Habanero Hot Sauce", "price": 0.5, "group": "Hot & Fiery"}, {"id": "sauce-59", "name": "Ghost Pepper Sauce", "price": 0.5, "group": "Hot & Fiery"}, {"id": "sauce-60", "name": "Jalapeno Ranch", "price": 0.5, "group": "Hot & Fiery"}, {"id": "sauce-61", "name": "Avocado Crema", "price": 0.5, "group": "Crema & Citrus"}, {"id": "sauce-62", "name": "Chipotle Crema", "price": 0.5, "group": "Crema & Citrus"}, {"id": "sauce-63", "name": "Lime Crema", "price": 0.5, "group": "Crema & Citrus"}, {"id": "sauce-64", "name": "Cilantro Lime Sauce", "price": 0.5, "group": "Crema & Citrus"}, {"id": "sauce-65", "name": "Honey Sriracha", "price": 0.5, "group": "Crema & Citrus"}, {"id": "sauce-66", "name": "Maple Mustard", "price": 0.5, "group": "Mustards & Condiments"}, {"id": "sauce-67", "name": "Dijon Mustard", "price": 0.5, "group": "Mustards & Condiments"}, {"id": "sauce-68", "name": "Yellow Mustard", "price": 0.5, "group": "Mustards & Condiments"}, {"id": "sauce-69", "name": "Ketchup", "price": 0.5, "group": "Mustards & Condiments"}, {"id": "sauce-70", "name": "Classic Mayo", "price": 0.5, "group": "Mustards & Condiments"}, {"id": "sauce-71", "name": "Vegan Mayo", "price": 0.5, "group": "Mustards & Condiments"}, {"id": "sauce-72", "name": "Sour Cream", "price": 0.5, "group": "Mustards & Condiments"}, {"id": "sauce-73", "name": "Greek Yogurt Sauce", "price": 0.5, "group": "Yogurt & Coconut"}, {"id": "sauce-74", "name": "Herb Yogurt Sauce", "price": 0.5, "group": "Yogurt & Coconut"}, {"id": "sauce-75", "name": "Coconut Curry Sauce", "price": 0.5, "group": "Yogurt & Coconut"}, {"id": "sauce-76", "name": "Peanut Sauce", "price": 0.5, "group": "Yogurt & Coconut"}, {"id": "sauce-77", "name": "Satay Sauce", "price": 0.5, "group": "Yogurt & Coconut"}, {"id": "sauce-78", "name": "Toasted Sesame Oil Drizzle", "price": 0.5, "group": "Oils & Drizzles"}, {"id": "sauce-79", "name": "Chili Oil", "price": 0.5, "group": "Oils & Drizzles"}, {"id": "sauce-80", "name": "Garlic Oil", "price": 0.5, "group": "Oils & Drizzles"}, {"id": "sauce-81", "name": "Rosemary Oil", "price": 0.5, "group": "Oils & Drizzles"}, {"id": "sauce-82", "name": "Lemon Butter Sauce", "price": 0.5, "group": "Oils & Drizzles"}, {"id": "sauce-83", "name": "Cocktail Sauce", "price": 0.5, "group": "Seafood Classics"}, {"id": "sauce-84", "name": "Remoulade", "price": 0.5, "group": "Seafood Classics"}, {"id": "sauce-85", "name": "Horseradish Sauce", "price": 0.5, "group": "Seafood Classics"}, {"id": "sauce-86", "name": "Steak Sauce", "price": 0.5, "group": "Seafood Classics"}, {"id": "sauce-87", "name": "Worcestershire Glaze", "price": 0.5, "group": "Seafood Classics"}, {"id": "sauce-88", "name": "Balsamic Glaze", "price": 0.5, "group": "Glazes"}, {"id": "sauce-89", "name": "Honey Glaze", "price": 0.5, "group": "Glazes"}, {"id": "sauce-90", "name": "Maple Glaze", "price": 0.5, "group": "Glazes"}, {"id": "sauce-91", "name": "Buffalo Ranch Blend", "price": 0.5, "group": "Glazes"}, {"id": "sauce-92", "name": "Sweet Soy Glaze", "price": 0.5, "group": "Glazes"}, {"id": "sauce-93", "name": "Miso Glaze", "price": 0.5, "group": "Glazes"}, {"id": "sauce-94", "name": "Gochujang Sauce", "price": 0.5, "group": "Global Hot Sauces"}, {"id": "sauce-95", "name": "Harissa Yogurt", "price": 0.5, "group": "Global Hot Sauces"}, {"id": "sauce-96", "name": "Zhoug", "price": 0.5, "group": "Global Hot Sauces"}, {"id": "sauce-97", "name": "Toum", "price": 0.5, "group": "Global Hot Sauces"}]}, {"id": "spice", "label": "Spice Level", "selectionType": "single", "required": true, "minSelect": 1, "maxSelect": 1, "freeIncluded": 1, "options": [{"id": "spice-1", "name": "No Spice", "price": 0.0}, {"id": "spice-2", "name": "Mild", "price": 0.0}, {"id": "spice-3", "name": "Medium", "price": 0.0}, {"id": "spice-4", "name": "Hot", "price": 0.0}, {"id": "spice-5", "name": "Extra Hot (Ghost Pepper)", "price": 0.0}]}, {"id": "bread", "label": "Bread / Wrap", "selectionType": "single", "required": false, "minSelect": 0, "maxSelect": 1, "freeIncluded": 1, "options": [{"id": "bread-1", "name": "Pita Bread", "price": 0.0, "group": "Breads"}, {"id": "bread-2", "name": "Naan", "price": 0.0, "group": "Breads"}, {"id": "bread-3", "name": "Lavash", "price": 0.0, "group": "Breads"}, {"id": "bread-4", "name": "Baguette", "price": 0.0, "group": "Breads"}, {"id": "bread-5", "name": "Ciabatta Roll", "price": 0.0, "group": "Breads"}, {"id": "bread-6", "name": "Sourdough Bread", "price": 0.0, "group": "Breads"}, {"id": "bread-7", "name": "Flour Tortilla", "price": 0.0, "group": "Wraps & Buns"}, {"id": "bread-8", "name": "Corn Tortilla", "price": 0.0, "group": "Wraps & Buns"}, {"id": "bread-9", "name": "Brioche Bun", "price": 0.0, "group": "Wraps & Buns"}, {"id": "bread-10", "name": "Whole Wheat Wrap", "price": 0.0, "group": "Wraps & Buns"}, {"id": "bread-11", "name": "Spinach Wrap", "price": 0.0, "group": "Wraps & Buns"}, {"id": "bread-12", "name": "Tomato Basil Wrap", "price": 0.0, "group": "Wraps & Buns"}]}, {"id": "extras", "label": "Extras & Add-ons", "selectionType": "multiple", "required": false, "minSelect": 0, "maxSelect": 10, "freeIncluded": 0, "options": [{"id": "extra-1", "name": "Extra Protein Scoop", "price": 1.0, "group": "More of the Basics"}, {"id": "extra-2", "name": "Extra Cheese", "price": 2.5, "group": "More of the Basics"}, {"id": "extra-3", "name": "Extra Sauce", "price": 2.0, "group": "More of the Basics"}, {"id": "extra-4", "name": "Extra Avocado", "price": 2.25, "group": "More of the Basics"}, {"id": "extra-5", "name": "Extra Guacamole", "price": 2.25, "group": "More of the Basics"}, {"id": "extra-6", "name": "Extra Pickles", "price": 2.25, "group": "More of the Basics"}, {"id": "extra-7", "name": "Extra Olives", "price": 1.5, "group": "More of the Basics"}, {"id": "extra-8", "name": "Extra Hummus", "price": 1.0, "group": "More of the Basics"}, {"id": "extra-9", "name": "Extra Tahini", "price": 2.25, "group": "More of the Basics"}, {"id": "extra-10", "name": "Fried Onions", "price": 1.5, "group": "Crispy & Crunchy"}, {"id": "extra-11", "name": "Crispy Onions", "price": 1.5, "group": "Crispy & Crunchy"}, {"id": "extra-12", "name": "Croutons", "price": 2.5, "group": "Crispy & Crunchy"}, {"id": "extra-13", "name": "Garlic Croutons", "price": 2.25, "group": "Crispy & Crunchy"}, {"id": "extra-14", "name": "Tortilla Strips", "price": 1.5, "group": "Crispy & Crunchy"}, {"id": "extra-15", "name": "Wonton Strips", "price": 1.5, "group": "Crispy & Crunchy"}, {"id": "extra-16", "name": "Fried Garlic Chips", "price": 1.75, "group": "Crispy & Crunchy"}, {"id": "extra-17", "name": "Fried Shallot Chips", "price": 1.75, "group": "Crispy & Crunchy"}, {"id": "extra-18", "name": "Onion Ring Topping", "price": 1.5, "group": "Crispy & Crunchy"}, {"id": "extra-19", "name": "Roasted Almonds", "price": 1.25, "group": "Nuts & Seeds"}, {"id": "extra-20", "name": "Roasted Cashews", "price": 1.75, "group": "Nuts & Seeds"}, {"id": "extra-21", "name": "Roasted Walnuts", "price": 2.75, "group": "Nuts & Seeds"}, {"id": "extra-22", "name": "Toasted Pine Nuts", "price": 2.25, "group": "Nuts & Seeds"}, {"id": "extra-23", "name": "Sunflower Seeds", "price": 2.5, "group": "Nuts & Seeds"}, {"id": "extra-24", "name": "Pumpkin Seeds", "price": 2.0, "group": "Nuts & Seeds"}, {"id": "extra-25", "name": "Sesame Seeds", "price": 1.5, "group": "Nuts & Seeds"}, {"id": "extra-26", "name": "Wasabi Peas", "price": 2.0, "group": "Nuts & Seeds"}, {"id": "extra-27", "name": "Bacon Bits", "price": 1.0, "group": "Eggs & Meats"}, {"id": "extra-28", "name": "Turkey Bacon Bits", "price": 1.5, "group": "Eggs & Meats"}, {"id": "extra-29", "name": "Hard Boiled Egg", "price": 1.75, "group": "Eggs & Meats"}, {"id": "extra-30", "name": "Fried Egg", "price": 2.0, "group": "Eggs & Meats"}, {"id": "extra-31", "name": "Poached Egg", "price": 2.0, "group": "Eggs & Meats"}, {"id": "extra-32", "name": "Crispy Prosciutto", "price": 1.75, "group": "Eggs & Meats"}, {"id": "extra-33", "name": "Smoked Salmon Add-On", "price": 1.75, "group": "Eggs & Meats"}, {"id": "extra-34", "name": "Bacon Jam", "price": 1.25, "group": "Eggs & Meats"}, {"id": "extra-35", "name": "Pickled Jalapeno Add", "price": 1.75, "group": "Finishing Touches"}, {"id": "extra-36", "name": "Mozzarella Stick Add-On", "price": 2.5, "group": "Finishing Touches"}, {"id": "extra-37", "name": "Chili Flake Sprinkle", "price": 2.25, "group": "Finishing Touches"}, {"id": "extra-38", "name": "Everything Bagel Sprinkle", "price": 1.25, "group": "Finishing Touches"}, {"id": "extra-39", "name": "Parmesan Crisp", "price": 1.0, "group": "Finishing Touches"}, {"id": "extra-40", "name": "Caramelized Onion Add", "price": 1.75, "group": "Finishing Touches"}, {"id": "extra-41", "name": "Roasted Garlic Add", "price": 2.0, "group": "Finishing Touches"}, {"id": "extra-42", "name": "Truffle Shavings", "price": 1.5, "group": "Finishing Touches"}, {"id": "extra-43", "name": "Pickled Ginger", "price": 2.5, "group": "Finishing Touches"}, {"id": "extra-44", "name": "Crispy Capers", "price": 2.25, "group": "Finishing Touches"}]}, {"id": "sides", "label": "Sides", "selectionType": "multiple", "required": false, "minSelect": 0, "maxSelect": 5, "freeIncluded": 0, "options": [{"id": "side-1", "name": "French Fries", "price": 4.25, "group": "Fried & Crispy"}, {"id": "side-2", "name": "Sweet Potato Fries", "price": 2.75, "group": "Fried & Crispy"}, {"id": "side-3", "name": "Onion Rings", "price": 2.75, "group": "Fried & Crispy"}, {"id": "side-4", "name": "Chips and Salsa", "price": 2.0, "group": "Fried & Crispy"}, {"id": "side-5", "name": "Chips and Guacamole", "price": 2.75, "group": "Fried & Crispy"}, {"id": "side-6", "name": "Side Salad", "price": 3.75, "group": "Salads & Light"}, {"id": "side-7", "name": "Caesar Salad", "price": 5.0, "group": "Salads & Light"}, {"id": "side-8", "name": "Coleslaw", "price": 2.25, "group": "Salads & Light"}, {"id": "side-9", "name": "Fresh Fruit Cup", "price": 3.5, "group": "Salads & Light"}, {"id": "side-10", "name": "Cottage Cheese Cup", "price": 4.25, "group": "Salads & Light"}, {"id": "side-11", "name": "Garlic Bread", "price": 2.75, "group": "Comfort Sides"}, {"id": "side-12", "name": "Rice Pilaf", "price": 4.5, "group": "Comfort Sides"}, {"id": "side-13", "name": "Steamed Rice", "price": 3.75, "group": "Comfort Sides"}, {"id": "side-14", "name": "Mashed Potatoes", "price": 2.75, "group": "Comfort Sides"}, {"id": "side-15", "name": "Mac and Cheese", "price": 4.25, "group": "Comfort Sides"}, {"id": "side-16", "name": "Soup of the Day", "price": 2.0, "group": "Comfort Sides"}, {"id": "side-17", "name": "Hummus and Pita", "price": 4.5, "group": "Global Bites"}, {"id": "side-18", "name": "Baba Ganoush", "price": 4.75, "group": "Global Bites"}, {"id": "side-19", "name": "Falafel Bites", "price": 2.25, "group": "Global Bites"}, {"id": "side-20", "name": "Spring Rolls", "price": 3.5, "group": "Global Bites"}, {"id": "side-21", "name": "Vegetable Samosas", "price": 2.5, "group": "Global Bites"}, {"id": "side-22", "name": "Papadum", "price": 5.25, "group": "Global Bites"}, {"id": "side-23", "name": "Extra Naan", "price": 3.75, "group": "Global Bites"}, {"id": "side-24", "name": "Pickle Spear", "price": 2.25, "group": "Small Extras"}, {"id": "side-25", "name": "Edamame Side", "price": 2.75, "group": "Small Extras"}]}, {"id": "drinks", "label": "Drinks", "selectionType": "multiple", "required": false, "minSelect": 0, "maxSelect": 5, "freeIncluded": 0, "options": [{"id": "drink-1", "name": "Coca-Cola", "price": 4.25, "group": "Sodas & Fizz"}, {"id": "drink-2", "name": "Diet Coke", "price": 3.0, "group": "Sodas & Fizz"}, {"id": "drink-3", "name": "Sprite", "price": 4.25, "group": "Sodas & Fizz"}, {"id": "drink-4", "name": "Fanta Orange", "price": 3.75, "group": "Sodas & Fizz"}, {"id": "drink-5", "name": "Root Beer", "price": 4.75, "group": "Sodas & Fizz"}, {"id": "drink-6", "name": "Ginger Ale", "price": 3.5, "group": "Sodas & Fizz"}, {"id": "drink-7", "name": "Sparkling Water", "price": 4.5, "group": "Sodas & Fizz"}, {"id": "drink-8", "name": "Classic Lemonade", "price": 4.5, "group": "Lemonade & Tea"}, {"id": "drink-9", "name": "Strawberry Lemonade", "price": 3.5, "group": "Lemonade & Tea"}, {"id": "drink-10", "name": "Iced Tea", "price": 4.0, "group": "Lemonade & Tea"}, {"id": "drink-11", "name": "Sweet Tea", "price": 3.25, "group": "Lemonade & Tea"}, {"id": "drink-12", "name": "Arnold Palmer", "price": 4.25, "group": "Lemonade & Tea"}, {"id": "drink-13", "name": "Hot Tea", "price": 3.5, "group": "Lemonade & Tea"}, {"id": "drink-14", "name": "Hibiscus Iced Tea", "price": 4.5, "group": "Lemonade & Tea"}, {"id": "drink-15", "name": "Mango Lassi", "price": 4.0, "group": "Lassi & Juice"}, {"id": "drink-16", "name": "Sweet Lassi", "price": 3.25, "group": "Lassi & Juice"}, {"id": "drink-17", "name": "Salted Lassi", "price": 2.5, "group": "Lassi & Juice"}, {"id": "drink-18", "name": "Rose Lassi", "price": 2.5, "group": "Lassi & Juice"}, {"id": "drink-19", "name": "Orange Juice", "price": 3.75, "group": "Lassi & Juice"}, {"id": "drink-20", "name": "Apple Juice", "price": 4.0, "group": "Lassi & Juice"}, {"id": "drink-21", "name": "Cranberry Juice", "price": 3.25, "group": "Lassi & Juice"}, {"id": "drink-22", "name": "Pineapple Juice", "price": 3.75, "group": "Coffee & Chai"}, {"id": "drink-23", "name": "Tamarind Cooler", "price": 2.5, "group": "Coffee & Chai"}, {"id": "drink-24", "name": "Iced Coffee", "price": 2.0, "group": "Coffee & Chai"}, {"id": "drink-25", "name": "Cold Brew Coffee", "price": 2.5, "group": "Coffee & Chai"}, {"id": "drink-26", "name": "Espresso", "price": 2.5, "group": "Coffee & Chai"}, {"id": "drink-27", "name": "Cappuccino", "price": 2.75, "group": "Coffee & Chai"}, {"id": "drink-28", "name": "Latte", "price": 3.25, "group": "Shakes & Smoothies"}, {"id": "drink-29", "name": "Masala Chai Latte", "price": 2.25, "group": "Shakes & Smoothies"}, {"id": "drink-30", "name": "Vanilla Milkshake", "price": 2.5, "group": "Shakes & Smoothies"}, {"id": "drink-31", "name": "Chocolate Milkshake", "price": 3.75, "group": "Shakes & Smoothies"}, {"id": "drink-32", "name": "Strawberry Milkshake", "price": 3.75, "group": "Shakes & Smoothies"}, {"id": "drink-33", "name": "Mango Smoothie", "price": 2.0, "group": "Shakes & Smoothies"}, {"id": "drink-34", "name": "Berry Smoothie", "price": 3.0, "group": "Shakes & Smoothies"}, {"id": "drink-35", "name": "Green Detox Smoothie", "price": 3.5, "group": "Water & Sports"}, {"id": "drink-36", "name": "Horchata", "price": 3.0, "group": "Water & Sports"}, {"id": "drink-37", "name": "Still Water", "price": 2.25, "group": "Water & Sports"}, {"id": "drink-38", "name": "Coconut Water", "price": 3.0, "group": "Water & Sports"}, {"id": "drink-39", "name": "Energy Drink", "price": 4.5, "group": "Water & Sports"}, {"id": "drink-40", "name": "Sports Drink", "price": 3.5, "group": "Water & Sports"}]}, {"id": "desserts", "label": "Desserts", "selectionType": "multiple", "required": false, "minSelect": 0, "maxSelect": 5, "freeIncluded": 0, "options": [{"id": "dessert-1", "name": "Chocolate Chip Cookie", "price": 5.25, "group": "Baked Goods"}, {"id": "dessert-2", "name": "Double Fudge Brownie", "price": 6.0, "group": "Baked Goods"}, {"id": "dessert-3", "name": "Churros", "price": 5.5, "group": "Baked Goods"}, {"id": "dessert-4", "name": "Glazed Donut", "price": 4.0, "group": "Baked Goods"}, {"id": "dessert-5", "name": "Cinnamon Roll", "price": 2.5, "group": "Baked Goods"}, {"id": "dessert-6", "name": "French Macarons", "price": 4.0, "group": "Baked Goods"}, {"id": "dessert-7", "name": "Cannoli", "price": 5.5, "group": "Baked Goods"}, {"id": "dessert-8", "name": "Tiramisu", "price": 6.0, "group": "Cakes & Pastry"}, {"id": "dessert-9", "name": "New York Cheesecake", "price": 6.25, "group": "Cakes & Pastry"}, {"id": "dessert-10", "name": "Apple Pie Slice", "price": 4.25, "group": "Cakes & Pastry"}, {"id": "dessert-11", "name": "Carrot Cake Slice", "price": 5.5, "group": "Cakes & Pastry"}, {"id": "dessert-12", "name": "Red Velvet Cake Slice", "price": 4.75, "group": "Cakes & Pastry"}, {"id": "dessert-13", "name": "Vanilla Ice Cream", "price": 5.0, "group": "Ice Cream & Frozen"}, {"id": "dessert-14", "name": "Chocolate Ice Cream", "price": 3.25, "group": "Ice Cream & Frozen"}, {"id": "dessert-15", "name": "Strawberry Ice Cream", "price": 3.25, "group": "Ice Cream & Frozen"}, {"id": "dessert-16", "name": "Pistachio Gelato", "price": 4.25, "group": "Ice Cream & Frozen"}, {"id": "dessert-17", "name": "Mango Sorbet", "price": 2.5, "group": "Ice Cream & Frozen"}, {"id": "dessert-18", "name": "Kulfi", "price": 3.75, "group": "Ice Cream & Frozen"}, {"id": "dessert-19", "name": "Baklava", "price": 5.25, "group": "Global Sweets"}, {"id": "dessert-20", "name": "Gulab Jamun", "price": 4.0, "group": "Global Sweets"}, {"id": "dessert-21", "name": "Rasmalai", "price": 3.25, "group": "Global Sweets"}, {"id": "dessert-22", "name": "Kheer", "price": 4.25, "group": "Global Sweets"}, {"id": "dessert-23", "name": "Rice Pudding", "price": 3.0, "group": "Global Sweets"}, {"id": "dessert-24", "name": "Vanilla Custard", "price": 5.0, "group": "Global Sweets"}, {"id": "dessert-25", "name": "Fresh Fruit Salad", "price": 2.5, "group": "Global Sweets"}]}], "pricingRules": {"taxRatePercent": 8, "serviceFeeFlat": 0, "roundToNearest": 0.01, "estimateDisclaimer": "This is an automatic estimate only. Your final price and order will be confirmed by our team before any payment is made."}, "leadCapture": {"method": "whatsapp", "whatsappNumber": "+91XXXXXXXXXX", "messageTemplate": "Hi! I built a plate on your site:\n{plateSummary}\nEstimated total: {estimatedTotal}\nName: {customerName}\nPhone: {customerPhone}", "fallbackEmail": "orders@yourbusiness.com", "note": "Replace the placeholder WhatsApp number / email before deploying."}};
+const state = { sizeId: DATA.sizes[1].id, selections: {}, activeStep: 0, searchTerms: {}, globalSearch: '' };
+DATA.categories.forEach(c => { state.selections[c.id] = []; state.searchTerms[c.id] = ''; });
+
+function fmt(n) { return '$' + n.toFixed(2); }
+
+
+const allFoodItems = DATA.categories.flatMap((cat, step) =>
+  cat.options.map(opt => ({ ...opt, categoryId: cat.id, categoryLabel: cat.label, step }))
+);
+
+function renderGlobalSearch() {
+  const input = document.getElementById('globalSearch');
+  const results = document.getElementById('searchResults');
+  const clear = document.getElementById('globalSearchClear');
+  const term = state.globalSearch.trim().toLowerCase();
+  clear.hidden = !term;
+  results.innerHTML = '';
+  if (!term) {
+    results.classList.remove('open');
+    return;
+  }
+
+  const matches = allFoodItems.filter(item =>
+    item.name.toLowerCase().includes(term) ||
+    (item.group || '').toLowerCase().includes(term) ||
+    item.categoryLabel.toLowerCase().includes(term)
+  ).slice(0, 18);
+
+  results.classList.add('open');
+  if (!matches.length) {
+    results.innerHTML = '<div class="search-empty">No food items found for "' +
+      term.replace(/"/g, '&quot;') + '".</div>';
+    return;
+  }
+
+  const count = document.createElement('div');
+  count.className = 'search-count';
+  count.textContent = matches.length + (matches.length === 18 ? '+' : '') + ' result' + (matches.length === 1 ? '' : 's');
+  results.appendChild(count);
+
+  matches.forEach(item => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'search-result';
+    button.setAttribute('role', 'option');
+    button.innerHTML =
+      '<span class="result-dot"></span><span class="result-copy">' +
+      '<span class="result-name"></span><span class="result-meta"></span></span>' +
+      (item.price > 0 ? '<span class="opt-price">' + fmt(item.price) + '</span>' : '<span class="opt-price">included</span>');
+    button.querySelector('.result-name').textContent = item.name;
+    button.querySelector('.result-meta').textContent = item.categoryLabel + (item.group ? ' · ' + item.group : '');
+    button.onclick = () => {
+      state.activeStep = item.step;
+      state.searchTerms[item.categoryId] = '';
+      state.globalSearch = '';
+      input.value = '';
+      renderGlobalSearch();
+      renderNav();
+      renderPanel();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => document.querySelector('.panel .option-row')?.focus?.(), 350);
+    };
+    results.appendChild(button);
+  });
+}
+
+function initGlobalSearch() {
+  const input = document.getElementById('globalSearch');
+  const clear = document.getElementById('globalSearchClear');
+  input.oninput = e => {
+    state.globalSearch = e.target.value;
+    renderGlobalSearch();
+  };
+  input.onkeydown = e => {
+    if (e.key === 'Escape') {
+      state.globalSearch = '';
+      input.value = '';
+      renderGlobalSearch();
+      input.blur();
+    }
+  };
+  clear.onclick = () => {
+    state.globalSearch = '';
+    input.value = '';
+    renderGlobalSearch();
+    input.focus();
+  };
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-shell')) {
+      document.getElementById('searchResults').classList.remove('open');
+    }
+  });
+}
+
+function renderSizes() {
+  const el = document.getElementById('sizePicker');
+  el.innerHTML = '';
+  DATA.sizes.forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'size-btn' + (s.id === state.sizeId ? ' active' : '');
+    b.textContent = s.name + ' · ' + fmt(s.basePrice);
+    b.onclick = () => { state.sizeId = s.id; renderSizes(); renderTicket(); };
+    el.appendChild(b);
+  });
+}
+
+function renderNav() {
+  const navCol = document.getElementById('navCol');
+  const mobileNav = document.getElementById('mobileNav');
+  navCol.innerHTML = ''; mobileNav.innerHTML = '';
+  DATA.categories.forEach((cat, i) => {
+    const done = state.selections[cat.id].length > 0;
+    const item = document.createElement('button');
+    item.className = 'nav-item' + (i === state.activeStep ? ' active' : '');
+    item.innerHTML = '<span class="n">' + String(i+1).padStart(2,'0') + '</span><span class="l">' + cat.label + '</span><span class="c ' + (done ? 'done' : (cat.required ? 'warn' : '')) + '">' + (done ? '✓' : (cat.required ? '!' : '')) + '</span>';
+    item.onclick = () => { state.activeStep = i; renderNav(); renderPanel(); };
+    navCol.appendChild(item);
+
+    const pill = document.createElement('button');
+    pill.className = 'pill' + (i === state.activeStep ? ' active' : '');
+    pill.textContent = (i+1) + '. ' + cat.label + (done ? ' ✓' : '');
+    pill.onclick = () => { state.activeStep = i; renderNav(); renderPanel(); };
+    mobileNav.appendChild(pill);
+  });
+}
+
+function toggleOption(cat, opt) {
+  const sel = state.selections[cat.id];
+  const idx = sel.indexOf(opt.id);
+  if (idx >= 0) {
+    sel.splice(idx, 1);
+  } else {
+    if (cat.selectionType === 'single') {
+      state.selections[cat.id] = [opt.id];
+    } else {
+      if (cat.maxSelect && sel.length >= cat.maxSelect) return;
+      sel.push(opt.id);
+    }
+  }
+  renderNav(); renderPanel(); renderTicket();
+}
+
+function renderPanel() {
+  const cat = DATA.categories[state.activeStep];
+  const panel = document.getElementById('panel');
+  panel.innerHTML = '';
+  panel.className = 'panel ' + (cat.selectionType === 'single' ? 'is-radio' : 'is-checkbox');
+
+  const head = document.createElement('div');
+  head.className = 'panel-head';
+  const atMax = cat.maxSelect && state.selections[cat.id].length >= cat.maxSelect;
+  head.innerHTML = '<h2>' + (state.activeStep+1) + '. ' + cat.label + '</h2>' +
+    '<div class="panel-limit' + (atMax ? ' warn' : '') + '">' +
+      (cat.selectionType === 'single' ? 'Choose 1' + (cat.required ? ' (required)' : '') :
+        'Choose up to ' + cat.maxSelect + (cat.freeIncluded ? ' · first ' + cat.freeIncluded + ' free' : '') +
+        (atMax ? ' — limit reached' : '')) +
+    '</div>';
+  panel.appendChild(head);
+
+  if (cat.options.length > 15) {
+    const search = document.createElement('input');
+    search.className = 'search-input';
+    search.placeholder = 'Search ' + cat.label.toLowerCase() + '…';
+    search.value = state.searchTerms[cat.id];
+    search.oninput = (e) => { state.searchTerms[cat.id] = e.target.value; renderPanel(); };
+    panel.appendChild(search);
+  }
+
+  const chosen = state.selections[cat.id].map(id => cat.options.find(o => o.id === id)).filter(Boolean);
+  const strip = document.createElement('div');
+  strip.className = 'selected-strip';
+  if (chosen.length === 0) {
+    strip.innerHTML = '<span class="empty-note">Nothing picked yet in this step.</span>';
+  } else {
+    chosen.forEach(o => {
+      const tag = document.createElement('span');
+      tag.className = 'sel-tag';
+      tag.innerHTML = o.name + ' <button aria-label="remove">×</button>';
+      tag.querySelector('button').onclick = () => toggleOption(cat, o);
+      strip.appendChild(tag);
+    });
+  }
+  panel.appendChild(strip);
+
+  const term = state.searchTerms[cat.id].trim().toLowerCase();
+  const groupsMap = new Map();
+  cat.options.forEach(o => {
+    const g = o.group || '';
+    if (!groupsMap.has(g)) groupsMap.set(g, []);
+    groupsMap.get(g).push(o);
+  });
+
+  let anyVisible = false;
+  groupsMap.forEach((opts, groupLabel) => {
+    const visible = term ? opts.filter(o => o.name.toLowerCase().includes(term)) : opts;
+    if (visible.length === 0) return;
+    anyVisible = true;
+    const block = document.createElement('div');
+    block.className = 'group-block';
+    if (groupLabel) {
+      const h3 = document.createElement('h3');
+      h3.textContent = groupLabel;
+      block.appendChild(h3);
+    }
+    const grid = document.createElement('div');
+    grid.className = 'option-grid';
+    visible.forEach(opt => {
+      const selected = state.selections[cat.id].includes(opt.id);
+      const disabled = !selected && cat.maxSelect && state.selections[cat.id].length >= cat.maxSelect && cat.selectionType !== 'single';
+      const row = document.createElement('label');
+      row.className = 'option-row' + (selected ? ' selected' : '') + (disabled ? ' disabled' : '');
+      row.style.setProperty('--i', grid.children.length);
+      row.innerHTML = '<span class="box"></span><span class="opt-name">' + opt.name + '</span>' +
+        (opt.price > 0 ? '<span class="opt-price">' + fmt(opt.price) + '</span>' : '<span class="opt-price">included</span>');
+      row.onclick = () => toggleOption(cat, opt);
+      grid.appendChild(row);
+    });
+    block.appendChild(grid);
+    panel.appendChild(block);
+  });
+
+  if (!anyVisible) {
+    const nm = document.createElement('div');
+    nm.className = 'no-match';
+    nm.textContent = 'No matches for "' + state.searchTerms[cat.id] + '".';
+    panel.appendChild(nm);
+  }
+
+  const foot = document.createElement('div');
+  foot.className = 'panel-foot';
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'foot-btn';
+  prevBtn.textContent = 'Back';
+  prevBtn.disabled = state.activeStep === 0;
+  prevBtn.onclick = () => { state.activeStep--; renderNav(); renderPanel(); window.scrollTo({top:0, behavior:'smooth'}); };
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'foot-btn primary';
+  nextBtn.textContent = state.activeStep === DATA.categories.length - 1 ? 'Done' : 'Next: ' + DATA.categories[Math.min(state.activeStep+1, DATA.categories.length-1)].label;
+  nextBtn.onclick = () => {
+    if (state.activeStep < DATA.categories.length - 1) { state.activeStep++; renderNav(); renderPanel(); window.scrollTo({top:0, behavior:'smooth'}); }
+    else { openSheet(); }
+  };
+  foot.appendChild(prevBtn); foot.appendChild(nextBtn);
+  panel.appendChild(foot);
+}
+
+function categoryCost(cat) {
+  const chosen = state.selections[cat.id].map(id => cat.options.find(o => o.id === id)).filter(Boolean).sort((a,b) => a.price - b.price);
+  const free = cat.freeIncluded || 0;
+  return chosen.slice(free).reduce((sum,o) => sum + o.price, 0);
+}
+
+function ticketMarkup() {
+  const size = DATA.sizes.find(s => s.id === state.sizeId);
+  let linesHtml = '';
+  let any = false;
+  DATA.categories.forEach(cat => {
+    const chosen = state.selections[cat.id].map(id => cat.options.find(o => o.id === id)).filter(Boolean);
+    chosen.forEach(o => {
+      any = true;
+      linesHtml += '<div class="ticket-line"><span><span class="cat">' + cat.label + '</span><span class="name">' + o.name + '</span></span><span class="amt">' + (o.price > 0 ? fmt(o.price) : '—') + '</span></div>';
+    });
+  });
+  if (!any) linesHtml = '<div class="ticket-empty">Nothing picked yet — start with your base.</div>';
+
+  const categorySubtotal = DATA.categories.reduce((sum,c) => sum + categoryCost(c), 0);
+  const subtotal = size.basePrice + categorySubtotal;
+  const tax = subtotal * (DATA.pricingRules.taxRatePercent / 100);
+  const total = subtotal + tax + (DATA.pricingRules.serviceFeeFlat || 0);
+  state._total = total; state._size = size;
+
+  const totalsHtml =
+    '<div class="row"><span>Base (' + size.name + ')</span><span class="amt">' + fmt(size.basePrice) + '</span></div>' +
+    '<div class="row"><span>Add-ons</span><span class="amt">' + fmt(categorySubtotal) + '</span></div>' +
+    '<div class="row"><span>Tax (' + DATA.pricingRules.taxRatePercent + '%)</span><span class="amt">' + fmt(tax) + '</span></div>' +
+    '<div class="row grand"><span>Total</span><span class="amt">' + fmt(total) + '</span></div>';
+
+  return { linesHtml, totalsHtml, size, total };
+}
+
+function renderTicket() {
+  const { linesHtml, totalsHtml, size, total } = ticketMarkup();
+  document.getElementById('ticketSize').textContent = size.name + ' plate';
+  document.getElementById('ticketLines').innerHTML = linesHtml;
+  document.getElementById('ticketTotals').innerHTML = totalsHtml;
+  document.getElementById('disclaimerText').textContent = DATA.pricingRules.estimateDisclaimer;
+  document.getElementById('mobileTotal').textContent = fmt(total);
+  if (document.getElementById('sheet').style.display !== 'none') renderSheet();
+}
+
+function renderSheet() {
+  document.getElementById('sheetContent').innerHTML =
+    '<div class="ticket-edge"></div><h2 style="color:var(--ember)">Your Ticket</h2><div id="sheetLines"></div><div id="sheetTotals" class="ticket-totals"></div><button class="send-btn" id="sendBtnMobile">Send order on WhatsApp</button><p class="send-warn" id="sendWarnMobile">Please choose a base and spice level first.</p>';
+  const { linesHtml, totalsHtml } = ticketMarkup();
+  document.getElementById('sheetLines').innerHTML = linesHtml;
+  document.getElementById('sheetTotals').innerHTML = totalsHtml;
+  document.getElementById('sendBtnMobile').onclick = sendOrder;
+}
+
+function openSheet() {
+  document.getElementById('sheet').style.display = 'block';
+  document.getElementById('sheetOverlay').classList.add('open');
+  renderSheet();
+}
+function closeSheet() {
+  document.getElementById('sheet').style.display = 'none';
+  document.getElementById('sheetOverlay').classList.remove('open');
+}
+document.getElementById('mobileTicketBtn').onclick = openSheet;
+document.getElementById('sheetClose').onclick = closeSheet;
+document.getElementById('sheetOverlay').onclick = closeSheet;
+
+function requiredMet() {
+  return DATA.categories.filter(c => c.required).every(c => state.selections[c.id].length > 0);
+}
+
+function sendOrder() {
+  if (!requiredMet()) {
+    document.getElementById('sendWarn').style.display = 'block';
+    const mw = document.getElementById('sendWarnMobile');
+    if (mw) mw.style.display = 'block';
+    const firstMissing = DATA.categories.findIndex(c => c.required && state.selections[c.id].length === 0);
+    if (firstMissing >= 0) { state.activeStep = firstMissing; renderNav(); renderPanel(); closeSheet(); window.scrollTo({top:0, behavior:'smooth'}); }
+    return;
+  }
+  const size = state._size;
+  const parts = [];
+  DATA.categories.forEach(cat => {
+    const chosen = state.selections[cat.id].map(id => cat.options.find(o => o.id === id)).filter(Boolean);
+    if (chosen.length) parts.push(cat.label + ': ' + chosen.map(o => o.name).join(', '));
+  });
+  const summary = size.name + ' plate\n' + parts.join('\n');
+  const msg = DATA.leadCapture.messageTemplate
+    .replace('{plateSummary}', summary).replace('{estimatedTotal}', fmt(state._total))
+    .replace('{customerName}', '').replace('{customerPhone}', '');
+  const phone = DATA.leadCapture.whatsappNumber.replace(/[^0-9]/g, '');
+  window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+}
+document.getElementById('sendBtn').onclick = sendOrder;
+
+renderSizes(); renderNav(); renderPanel(); renderTicket(); initGlobalSearch();
+</script>
+</body>
+</html>
